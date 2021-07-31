@@ -1,5 +1,5 @@
 let expo = {};
-const sql = require('postgres')(process.env.DATABASE_URL, {idle_timeout: 2});
+const sql = require('postgres')(process.env.DATABASE_URL, {idle_timeout: 2, max: 5});
 expo.sql = sql;
 
 expo.init = async () => {
