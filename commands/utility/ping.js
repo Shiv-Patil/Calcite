@@ -1,5 +1,4 @@
 const Discord = require("discord.js");
-const client = new Discord.Client();
 
 module.exports = {
   name: 'ping',
@@ -7,7 +6,7 @@ module.exports = {
   category: "Utility",
   description: "Pong",
   cooldown: 3,
-  async execute (message, args, config) {
+  async execute (message, args, client, config) {
     return message.channel.send("pong")
   }
 }

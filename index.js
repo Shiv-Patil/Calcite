@@ -12,10 +12,14 @@ client.on("ready", () => {
   console.log(`Logged in as ${client.user.username}`);
 })
 
-const commandFiles = fs.readdirSync(join(__dirname, "commands")).filter((file) => file.endsWith(".js"));
-for (const file of commandFiles) {
-  const command = require(join(__dirname, "commands", `${file}`));
-  client.commands.set(command.name, command);
+const commandFolders = fs.readdirSync(join(__dirname, "commands"));
+
+for (const folder of commandFolders) {
+  const commandFiles = fs.readdirSync(join(__dirname, "commands", `${folder}`)).filter((file) => file.endsWith(".js"));
+  for (const file of commandFiles) {
+    const command = require(join(__dirname, "commands", `${folder}`, `${file}`));
+    client.commands.set(command.name, command);
+  }
 }
 
 client.on("message", (message) => {
@@ -49,7 +53,7 @@ client.on("message", (message) => {
 
   const now = Date.now();
   const timestamps = cooldowns.get(command.name);
-  const cooldownAmount = (command.cooldown || 1) * 1000;
+  const cooldownAmount = (command.cooldown || 3) * 1000;
 
   if (timestamps.has(message.author.id)) {
     const expirationTime = timestamps.get(message.author.id) + cooldownAmount;
@@ -66,7 +70,7 @@ client.on("message", (message) => {
   setTimeout(() => timestamps.delete(message.author.id), cooldownAmount);
 
   try {
-    command.execute(message, args, config);
+    command.execute(message, args, client, config);
   } catch (error) {
     console.error(error);
     message.reply("There was an error executing that command.").catch(console.error);
