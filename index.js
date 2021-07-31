@@ -22,12 +22,19 @@ client.on("message", (message) => {
   if (message.author.bot) return;
   if (!message.guild) return;
 
+  if (message.content === `<@!${client.user.id}>`) return message.reply(`my prefix here is \`${config.prefix}\` <:mhml:847464650043555880>`);
+
   const prefixRegex = new RegExp(`^(<@!?${client.user.id}>|${escapeRegex(config.prefix)})\\s*`);
   if (!prefixRegex.test(message.content)) return;
 
   const [, matchedPrefix] = message.content.match(prefixRegex);
 
-  const args = message.content.slice(matchedPrefix.length).trim().split(/ +/);
+  const args = Array.from(
+      message.content.slice(matchedPrefix.length)
+      .trim()
+      .matchAll(/"([^"\\]*(?:\\.[^"\\]*)*)"|'([^'\\]*(?:\\.[^'\\]*)*)'|[^\s]+/g)
+    ).map(x => x[1] || x[2] || x[0]);
+
   const commandName = args.shift().toLowerCase();
 
   const command =
@@ -59,7 +66,7 @@ client.on("message", (message) => {
   setTimeout(() => timestamps.delete(message.author.id), cooldownAmount);
 
   try {
-    command.execute(message, args);
+    command.execute(message, args, config);
   } catch (error) {
     console.error(error);
     message.reply("There was an error executing that command.").catch(console.error);
