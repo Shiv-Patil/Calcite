@@ -3,6 +3,7 @@ const config = require('./config.json');
 const client = new Discord.Client();
 const { join } = require("path");
 const fs = require("fs");
+require('dotenv').config();
 
 client.commands = new Discord.Collection();
 const cooldowns = new Discord.Collection();
@@ -77,4 +78,4 @@ client.on("message", (message) => {
   }
 });
 
-client.login(config.token);
+client.login(process.env.CLIENT_TOKEN);
