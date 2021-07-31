@@ -6,7 +6,7 @@ module.exports = {
   category: "Utility",
   description: "Displays an user's avatar",
   cooldown: 3,
-  async execute (message, args, client, config) {
+  async execute (message, args, client) {
     let target;
     if (args.length < 1) target = message.author;
     else if (args.length > 1) return message.reply("this command accepts a maximum of 1 argument");

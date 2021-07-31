@@ -4,6 +4,8 @@ const client = new Discord.Client();
 const { join } = require("path");
 const fs = require("fs");
 require('dotenv').config();
+const db = require('./db');
+db.init();
 
 client.commands = new Discord.Collection();
 const cooldowns = new Discord.Collection();
@@ -23,13 +25,14 @@ for (const folder of commandFolders) {
   }
 }
 
-client.on("message", (message) => {
+client.on("message", async (message) => {
   if (message.author.bot) return;
   if (!message.guild) return;
 
-  if (message.content === `<@!${client.user.id}>`) return message.reply(`my prefix here is \`${config.prefix}\` <:mhml:847464650043555880>`);
+  let prefix = await db.fetch_prefix(message.guild.id);
+  if (message.content === `<@!${client.user.id}>`) return message.reply(`my prefix here is \`${prefix}\` <:mhml:847464650043555880>`);
 
-  const prefixRegex = new RegExp(`^(<@!?${client.user.id}>|${escapeRegex(config.prefix)})\\s*`);
+  const prefixRegex = new RegExp(`^(<@!?${client.user.id}>|${escapeRegex(prefix)})\\s*`);
   if (!prefixRegex.test(message.content)) return;
 
   const [, matchedPrefix] = message.content.match(prefixRegex);
@@ -71,7 +74,7 @@ client.on("message", (message) => {
   setTimeout(() => timestamps.delete(message.author.id), cooldownAmount);
 
   try {
-    command.execute(message, args, client, config);
+    command.execute(message, args, client);
   } catch (error) {
     console.error(error);
     message.reply("There was an error executing that command.").catch(console.error);

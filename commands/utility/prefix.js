@@ -1,5 +1,6 @@
 const Discord = require("discord.js");
 const fs = require('fs');
+const db = require('../../db');
 
 module.exports = {
   name: 'prefix',
@@ -7,20 +8,17 @@ module.exports = {
   category: "Utility",
   description: "Changes/Shows the bot prefix",
   cooldown: 3,
-  async execute (message, args, client, config) {
-    if (args.length < 1) return message.reply(`my prefix here is \`${config.prefix}\` <:mhml:847464650043555880>`);
+  async execute (message, args, client) {
+    let old_prefix = await db.fetch_prefix(message.guild.id);
+    if (args.length < 1) return message.reply(`my prefix here is \`${old_prefix}\` <:mhml:847464650043555880>`);
     else if (!(args.length > 1)) {
-      let old_prefix = config.prefix;
-      config.prefix = args[0];
-      fs.writeFile("config.json", JSON.stringify(config), function(err) {
-        if(err) {
-          config.prefix = old_prefix;
-          console.log(err);
-          return message.reply("An error occured.");
-        }
-      });
-      return message.reply(`my prefix has been changed to \`${config.prefix}\` <:mhml:847464650043555880>`);
+      if (message.member.hasPermission("MANAGE_GUILD")) {
+        await db.add_guild(message.guild.id);
+        await db.sql`update config set prefix = ${args[0]} where server_id = ${message.guild.id}`;
+        return message.reply(`my prefix has been changed to \`${args[0]}\` <:mhml:847464650043555880>`);
+      }
+      else return message.reply("You must have the permission `Manage Server` to be able to change the bot prefix.");
     }
-    else {return message.reply("This command accepts a maximum of 1 argument.");}
+    else return message.reply("This command accepts a maximum of 1 argument.");
   }
 }

@@ -6,7 +6,7 @@ module.exports = {
   category: "Utility",
   description: "Pong",
   cooldown: 3,
-  async execute (message, args, client, config) {
+  async execute (message, args, client) {
     return message.channel.send("pong")
   }
 }

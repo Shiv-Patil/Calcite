@@ -2,13 +2,13 @@
   "dependencies": {
     "discord.js": "^12.5.3",
     "dotenv": "^10.0.0",
-    "moment": "^2.29.1"
+    "moment": "^2.29.1",
+    "postgres": "^1.0.2"
   },
   "name": "calcite",
   "description": "A multi-purpose Discord bot created using Discord.js",
   "version": "1.0.0",
   "main": "index.js",
-  "devDependencies": {},
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node .",
