@@ -1,8 +1,9 @@
 let expo = {};
-const sql = require('postgres')(process.env.DATABASE_URL, {idle_timeout: 2, max: 5});
-expo.sql = sql;
+var sql;
 
-expo.init = async () => {
+expo.init = async (_sql) => {
+  sql = _sql;
+  expo.sql = _sql;
   await sql`
     CREATE TABLE IF NOT EXISTS config(
       server_id BIGINT,
@@ -98,9 +99,7 @@ expo.init = async () => {
 expo.add_guild = async (server_id) => {
   // Creates rows for a specific guild.
   let r = Array.from(await sql`SELECT server_id FROM config WHERE server_id=${server_id};`);
-  console.log(r);
   if (!r.length) {
-    console.log('insert');
     await sql`INSERT INTO config (server_id) VALUES (${server_id});`;
     await sql`INSERT INTO channels (server_id) VALUES (${server_id});`;
     await sql`INSERT INTO welcome (server_id) VALUES (${server_id});`;

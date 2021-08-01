@@ -4,8 +4,9 @@ const client = new Discord.Client();
 const { join } = require("path");
 const fs = require("fs");
 require('dotenv').config();
+const sql = require('postgres')(process.env.DATABASE_URL, {idle_timeout: 2, max: 5});
 const db = require('./db');
-db.init();
+db.init(sql);
 
 client.commands = new Discord.Collection();
 const cooldowns = new Discord.Collection();
