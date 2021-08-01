@@ -31,7 +31,7 @@ client.on("message", async (message) => {
   if (!message.guild) return;
 
   let prefix = await db.fetch_prefix(message.guild.id);
-  if (message.content === `<@!${client.user.id}>`) return message.reply(`my prefix here is \`${prefix}\` <:mhml:847464650043555880>`);
+  if ([`<@!${client.user.id}>`, `<@${client.user.id}>`].includes(message.content)) return message.reply(`my prefix here is \`${prefix}\` <:mhml:847464650043555880>`);
 
   const prefixRegex = new RegExp(`^(<@!?${client.user.id}>|${escapeRegex(prefix)})\\s*`);
   if (!prefixRegex.test(message.content)) return;
@@ -43,6 +43,8 @@ client.on("message", async (message) => {
       .trim()
       .matchAll(/"([^"\\]*(?:\\.[^"\\]*)*)"|'([^'\\]*(?:\\.[^'\\]*)*)'|[^\s]+/g)
     ).map(x => x[1] || x[2] || x[0]);
+
+  if (!args.length) return;
 
   const commandName = args.shift().toLowerCase();
 
