@@ -22,7 +22,7 @@ module.exports = {
     const avatarEmbed = new Discord.MessageEmbed()
       .setAuthor(target.tag, target.displayAvatarURL({dynamic: true}))
       .setTitle("Avatar")
-      .setImage(target.displayAvatarURL({size: 512}))
+      .setImage(target.displayAvatarURL({size: 512, dynamic: true}))
       .setFooter(message.author.tag, message.author.displayAvatarURL({dynamic: true}));
     return message.channel.send(avatarEmbed)
   }
