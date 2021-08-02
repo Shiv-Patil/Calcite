@@ -2,7 +2,7 @@ const Discord = require("discord.js");
 
 module.exports = {
   name: 'avatar',
-  aliases: ['avatar', 'pfp', 'icon'],
+  aliases: ['avatar', 'av', 'pfp', 'icon'],
   category: "Utility",
   description: "Displays an user's avatar",
   cooldown: 3,
