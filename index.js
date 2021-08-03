@@ -4,12 +4,13 @@ const { join } = require("path");
 const fs = require("fs");
 require('dotenv').config();
 const sql = require('postgres')(process.env.DATABASE_URL, {idle_timeout: 2, max: 5});
-const db = require('./db');
+const db = require(join(__dirname, "db", "db"));
 db.init(sql);
 
 client.commands = new Discord.Collection();
 const cooldowns = new Discord.Collection();
 
+const levelling = require("./levelling");
 const commandFolders = fs.readdirSync(join(__dirname, "commands"));
 for (const folder of commandFolders) {
   const commandFiles = fs.readdirSync(join(__dirname, "commands", `${folder}`)).filter((file) => file.endsWith(".js"));
@@ -31,7 +32,9 @@ client.on("message", async (message) => {
   let prefix = await db.fetch_prefix(message.guild.id);
 
   const prefixRegex = new RegExp(`^(<@!?${client.user.id}>|${escapeRegex(prefix)})\\s*`);
-  if (!prefixRegex.test(message.content)) return;
+  if (!prefixRegex.test(message.content)) {
+    return await levelling.on_msg(message);
+  }
 
   const [, matchedPrefix] = message.content.match(prefixRegex);
 

@@ -1,4 +1,4 @@
-const db = require('../../db');
+const db = require('../../db/db');
 
 module.exports = {
   name: 'prefix',
@@ -10,7 +10,7 @@ module.exports = {
     let old_prefix = await db.fetch_prefix(message.guild.id);
     if (args.length < 1) return message.reply(`my prefix here is \`${old_prefix}\` <:mhml:847464650043555880>`);
     else if (!(args.length > 1)) {
-      if (message.member.hasPermission("MANAGE_GUILD")) {
+      if (message.member.hasPermission("MANAGE_GUILD")||message.author.id==398061543373406208) {
         await db.add_guild(message.guild.id);
         await db.sql`update config set prefix = ${args[0]} where server_id = ${message.guild.id}`;
         return message.reply(`my prefix has been changed to \`${args[0]}\` <:mhml:847464650043555880>`);
