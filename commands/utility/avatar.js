@@ -14,9 +14,11 @@ module.exports = {
       let mentionID = args[0].trim().match(/^<@!?(\d+)>$/);
       if (!mentionID) mentionID = args[0].trim();
       else {mentionID = mentionID[1];}
-      await client.users.fetch(mentionID).then((user) => {
-        target = user;
-      }).catch(console.error);
+      try {
+        target = await client.users.fetch(mentionID);
+      } catch (error) {
+        target = undefined;
+      }
     }
     if (!target) return message.reply("please specify a valid user");
     const avatarEmbed = new Discord.MessageEmbed()
