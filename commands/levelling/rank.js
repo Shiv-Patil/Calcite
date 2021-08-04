@@ -29,12 +29,18 @@ function roundRect(ctx, x, y, width, height, radius, fill, stroke) {
   }  
 }
 
-const getTextFont = (canvas, text, max_width=200, fontSize=32) => {
-  const context = canvas.getContext('2d');
+const fillTextFit = (canvas, ctx, text, x, y, max_width=200, fontSize=32) => {
   do {
-    context.font = `${fontSize--}px sans-serif`;
-  } while (context.measureText(text).width > max_width);
-  return context.font;
+    if (fontSize <= 26) {
+      while (ctx.measureText(text).width > max_width) {
+        text = text.slice(0,-1);
+      }
+      break;
+    }
+    ctx.font = `${fontSize--}px sans-serif`;
+  } while (ctx.measureText(text).width > max_width);
+  ctx.fillText(text, 300, canvas.height-160);
+  return text;
 };
 
 const getCard = async (user, level, rank, xp, max_xp) => {
@@ -82,9 +88,8 @@ const getCard = async (user, level, rank, xp, max_xp) => {
   ctx.fillText(xp_left_lbl, canvas.width-50-(35+wd_xp_left_lbl), canvas.height-160);
 
   let lbl_username = user.username;
-  ctx.font = getTextFont(canvas, lbl_username, 490-wd_discrim_lbl-wd_xp_left_lbl);
-  let wd_username_lbl =ctx.measureText(lbl_username).width;
-  ctx.fillText(lbl_username, 300, canvas.height-160, 490-wd_discrim_lbl-wd_xp_left_lbl);
+  lbl_username = fillTextFit(canvas, ctx, lbl_username, 300, canvas.height-160, 490-wd_discrim_lbl-wd_xp_left_lbl);
+  let wd_username_lbl = ctx.measureText(lbl_username).width;
 
   ctx.font = '23px sans-serif';
   ctx.fillText(discrim_lbl, 310+wd_username_lbl, canvas.height-160);
