@@ -32,11 +32,11 @@ client.on("message", async (message) => {
   let prefix = await db.fetch_prefix(message.guild.id);
 
   const prefixRegex = new RegExp(`^(<@!?${client.user.id}>|${escapeRegex(prefix)})\\s*`);
-  if (!prefixRegex.test(message.content)) {
+  if (!prefixRegex.test(message.content.toLowerCase())) {
     return await levelling.on_msg(message);
   }
 
-  const [, matchedPrefix] = message.content.match(prefixRegex);
+  const [, matchedPrefix] = message.content.toLowerCase().match(prefixRegex);
 
   const args = Array.from(
       message.content.slice(matchedPrefix.length)

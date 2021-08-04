@@ -140,7 +140,6 @@ module.exports = {
       FROM ordered
       WHERE ordered.member_id = ${user.id};
     `);
-    console.log(r);
 
     if (user.bot) {
       return message.reply("Bots don't have levels <:CheemsPrayDorime:869938135725903913>");
