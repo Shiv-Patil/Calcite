@@ -46,7 +46,7 @@ const fillTextFit = (canvas, ctx, text, x, y, max_width=200, fontSize=32) => {
 const getCard = async (user, level, rank, xp, max_xp) => {
   const canvas = Canvas.createCanvas(900, 350);
   const ctx = canvas.getContext('2d');
-  const bg = await Canvas.loadImage(join(__dirname, "..", "..", "assets", "rank_bg.jpg"));
+  const bg = await Canvas.loadImage("https://picsum.photos/900/350");
   ctx.drawImage(bg, 0, 0, canvas.width, canvas.height);
   ctx.fillStyle = "rgba(0, 0, 0, .75)";
   ctx.fillRect(50, 50, 800, 250);
@@ -124,32 +124,37 @@ module.exports = {
         
       }
     }
+
     let r = Array.from(await db.sql`
-      SELECT * FROM level
-      WHERE server_id=${message.guild.id}
-      ORDER BY level DESC, xp DESC;
+      WITH ranks AS (
+        SELECT *
+        FROM level
+        WHERE server_id = ${message.guild.id}
+        ORDER BY member_level DESC, xp DESC
+      ),
+      ordered(member_level, xp, member_id, row_number) AS (
+        SELECT member_level, xp, member_id, row_number() over()
+        FROM ranks
+      )
+      SELECT *
+      FROM ordered
+      WHERE ordered.member_id = ${user.id};
     `);
-    var rank;
-    const entry = r.find((x, index) => {
-      if (x["member_id"] == user.id) {
-        rank = index+1;
-        return true;
-      }
-    })
+    console.log(r);
 
     if (user.bot) {
       return message.reply("Bots don't have levels <:CheemsPrayDorime:869938135725903913>");
     }
 
-    if (!entry) {
+    if (!r.length) {
       if (user == message.author) return message.reply("You don't have a level yet! Send messages to get a level.");
       return message.reply("That person doesn't have a level yet.")
     }
 
-    const { server_id, member_id, level, xp, lastmsg } = entry;
+    const { member_level, xp, member_id, row_number } = r[0];
     const attachment = new Discord.MessageAttachment(
       await getCard(
-        user, `${level}`, `${rank}`, xp, 3*level**2+50*level+100
+        user, `${member_level}`, `${row_number}`, xp, 3*member_level**2+50*member_level+100
       ), 'rank_card.png');
     return message.channel.send(attachment);
   }
