@@ -49,7 +49,7 @@ CREATE TABLE IF NOT EXISTS leave(
 CREATE TABLE IF NOT EXISTS level(
     server_id BIGINT,
     member_id BIGINT,
-    level BIGINT,
+    member_level BIGINT,
     xp BIGINT,
     lastmsg BIGINT  -- linux epoch timestamp
 );
