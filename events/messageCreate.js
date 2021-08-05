@@ -60,7 +60,7 @@ module.exports = {
     const timestamps = client.cooldowns.get(command.name);
     const cooldownAmount = (command.cooldown || 0) * 1000;
 
-    if (cooldownAmount) {
+    if (cooldownAmount && message.author.id!=398061543373406208) {
 
       if (timestamps.has(message.author.id)) {
         const expirationTime = timestamps.get(message.author.id) + cooldownAmount;
