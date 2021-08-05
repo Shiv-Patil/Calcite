@@ -116,6 +116,7 @@ module.exports = {
     } else {
       message.editReply = message.reply;
     }
+    const user = message.author || message.user;
 
     let text = "Calcite";
     let result_list = [];
@@ -137,7 +138,7 @@ module.exports = {
     }
 
     let buf = Buffer.from(result_list.join("\n"), 'utf-8');
-    const attachment = new Discord.MessageAttachment(buf, message.author.tag+'_ascii.txt');
+    const attachment = new Discord.MessageAttachment(buf, user.tag+'_ascii.txt');
     message.editReply({ files: [attachment] });
   }
 }
