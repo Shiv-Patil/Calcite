@@ -6,10 +6,22 @@ module.exports = {
   category: "Utility",
   description: "Displays an user's avatar",
   cooldown: 3,
+  options: [{
+    name: 'user',
+    type: 'USER',
+    description: 'The user to get avatar of',
+    required: false,
+  }],
   async execute (message, args, client) {
+    if (!args) {
+      args = message.options._hoistedOptions.map(({ value, ...etv }) => value);
+    } else {
+      message.editReply = message.reply;
+    }
+    let cmdUser = message.author || message.user
     let target;
-    if (args.length < 1) target = message.author;
-    else if (args.length > 1) return message.reply("this command accepts a maximum of 1 argument");
+    if (args.length < 1) target = message.author || message.user;
+    else if (args.length > 1) return message.editReply({ content: "this command accepts a maximum of 1 argument" });
     else {
       let mentionID = args[0].trim().match(/^<@!?(\d+)>$/);
       if (!mentionID) mentionID = args[0].trim();
@@ -20,12 +32,13 @@ module.exports = {
         target = undefined;
       }
     }
-    if (!target) return message.reply("please specify a valid user");
+    console.log(target.id.toString());
+    if (!target) return message.editReply({ content: "please specify a valid user" });
     const avatarEmbed = new Discord.MessageEmbed()
       .setAuthor(target.tag, target.displayAvatarURL({dynamic: true}))
       .setTitle("Avatar")
       .setImage(target.displayAvatarURL({size: 512, dynamic: true}))
-      .setFooter(message.author.tag, message.author.displayAvatarURL({dynamic: true}));
-    return message.channel.send(avatarEmbed)
+      .setFooter(cmdUser.tag, cmdUser.displayAvatarURL({dynamic: true}));
+    return message.editReply({ embeds: [avatarEmbed] })
   }
 }

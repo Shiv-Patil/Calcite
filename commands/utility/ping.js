@@ -5,6 +5,9 @@ module.exports = {
   description: "Pong",
   cooldown: 3,
   async execute (message, args, client) {
-    return message.channel.send(`Pong! ${Date.now() - message.createdTimestamp} ms.`);
+    if (args) {
+      message.editReply = message.reply;
+    }
+    return message.editReply({ content: `Pong! ${Date.now() - message.createdTimestamp} ms.` });
   }
 }

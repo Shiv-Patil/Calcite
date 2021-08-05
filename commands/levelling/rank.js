@@ -1,7 +1,6 @@
 const Discord = require("discord.js");
 const db = require('../../db/db');
 const Canvas = require('canvas');
-const { join } = require("path");
 
 function roundRect(ctx, x, y, width, height, radius, fill, stroke) {
   if (typeof stroke == "undefined" ) {
@@ -29,9 +28,9 @@ function roundRect(ctx, x, y, width, height, radius, fill, stroke) {
   }  
 }
 
-const fillTextFit = (canvas, ctx, text, x, y, max_width=200, fontSize=32) => {
+const fillTextFit = (canvas, ctx, text, x, y, max_width=200, fontSize=32, minFontSize=26) => {
   do {
-    if (fontSize <= 26) {
+    if (fontSize <= minFontSize) {
       while (ctx.measureText(text).width > max_width) {
         text = text.slice(0,-1);
       }
@@ -39,7 +38,7 @@ const fillTextFit = (canvas, ctx, text, x, y, max_width=200, fontSize=32) => {
     }
     ctx.font = `${fontSize--}px sans-serif`;
   } while (ctx.measureText(text).width > max_width);
-  ctx.fillText(text, 300, canvas.height-160);
+  ctx.fillText(text, x, y);
   return text;
 };
 
@@ -71,10 +70,10 @@ const getCard = async (user, level, rank, xp, max_xp) => {
   ctx.fillText("RANK", canvas.width-50-(68+wd_level+wd_level_lbl+wd_rank+wd_rank_lbl), 123);
 
   var grd = ctx.createLinearGradient(300, 0, 825, 0);
-  grd.addColorStop(0, "#27c9d8");
-  grd.addColorStop(xp/max_xp, "#27c9d8");
-  grd.addColorStop(xp/max_xp+0.005, "#6b6d6d");
-  grd.addColorStop(1, "#6b6d6d");
+  grd.addColorStop(0, "#907fa4");
+  grd.addColorStop(xp/max_xp, "#907fa4");
+  grd.addColorStop(xp/max_xp+0.005, "#4b4d4d");
+  grd.addColorStop(1, "#4b4d4d");
   ctx.fillStyle = grd;
   ctx.strokeStyle = "#000000";
   roundRect(ctx, 300, canvas.height-140, 515, 40, 20, true, true);
@@ -111,9 +110,21 @@ module.exports = {
   category: "Levelling",
   description: "Shows your rank and level",
   cooldown: 10,
+  options: [{
+    name: 'user',
+    type: 'USER',
+    description: 'The user to get rank of',
+    required: false,
+  }],
   async execute (message, args, client) {
-    if (args.length > 1) return message.reply("this command accepts a maximum of 1 argument");
-    let user = message.author;
+    if (!args) {
+      args = message.options._hoistedOptions.map(({ value, ...etv }) => value);
+    } else {
+      message.editReply = message.reply;
+    }
+
+    if (args.length > 1) return message.editReply({ content: "this command accepts a maximum of 1 argument" });
+    let user = message.author || message.user;
     if (args.length) {
       let mentionID = args[0].trim().match(/^<@!?(\d+)>$/);
       if (!mentionID) mentionID = args[0].trim();
@@ -142,19 +153,21 @@ module.exports = {
     `);
 
     if (user.bot) {
-      return message.reply("Bots don't have levels <:CheemsPrayDorime:869938135725903913>");
+      return message.editReply({ content: "Bots don't have levels <:CheemsPrayDorime:869938135725903913>" });
     }
 
     if (!r.length) {
-      if (user == message.author) return message.reply("You don't have a level yet! Send messages to get a level.");
-      return message.reply("That person doesn't have a level yet.")
+      if (user == message.author) return message.editReply({ content: "You don't have a level yet! Send messages to get a level." });
+      return message.editReply({ content: "That person doesn't have a level yet." });
     }
 
-    const { member_level, xp, member_id, row_number } = r[0];
+    let { member_level, xp, member_id, row_number } = r[0];
+    member_level = Number(member_level);
+    xp = Number(xp);
     const attachment = new Discord.MessageAttachment(
       await getCard(
         user, `${member_level}`, `${row_number}`, xp, 3*member_level**2+50*member_level+100
       ), 'rank_card.png');
-    return message.channel.send(attachment);
+    return message.editReply({ files: [attachment] });
   }
 }

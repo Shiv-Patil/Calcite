@@ -20,6 +20,9 @@ module.exports = {
       `;
     }
     var { server_id, member_id, member_level, xp, lastmsg } = r[0];
+    member_level = Number(member_level);
+    xp = Number(xp);
+    lastmsg = Number(lastmsg);
     if ((message.createdTimestamp - lastmsg) >= 60000) {
       let max = 3*member_level**2+50*member_level+100;
       xp += getRandomXp();
@@ -27,7 +30,7 @@ module.exports = {
         if(!member_level) member_level = 0;
         member_level += 1;
         xp -= max;
-        message.channel.send(`${message.author.tag} levelled up to level ${member_level}. <:CheemsPrayDorime:869938135725903913>`);
+        message.channel.send({ content: `${message.author.tag} levelled up to level ${member_level}. <:CheemsPrayDorime:869938135725903913>` });
       }
       return await db.sql`
         UPDATE level SET

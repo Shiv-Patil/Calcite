@@ -104,13 +104,25 @@ module.exports = {
   category: "Image",
   description: "Decorates plain text in ascii style",
   cooldown: 10,
+  options: [{
+    name: 'text',
+    type: 'STRING',
+    description: 'Text to decorate',
+    required: false,
+  }],
   async execute (message, args, client) {
+    if (!args) {
+      args = message.options._hoistedOptions.map(({ value, ...etv }) => value);
+    } else {
+      message.editReply = message.reply;
+    }
+
     let text = "Calcite";
     let result_list = [];
     let split_list = [];
   	if (args.length) text = args.join(" ");
 
-    if (text.length > 69) return message.reply("try again with fewer characters.");
+    if (text.length > 69) return message.editReply({ content: "try again with fewer characters." });
 
     for (let i = 0; i < text.length; i++) {
       if (!letter_dic[text[i]]) continue;
@@ -126,7 +138,7 @@ module.exports = {
 
     let buf = Buffer.from(result_list.join("\n"), 'utf-8');
     const attachment = new Discord.MessageAttachment(buf, message.author.tag+'_ascii.txt');
-    message.channel.send(attachment);
+    message.editReply({ files: [attachment] });
   }
 }
 
