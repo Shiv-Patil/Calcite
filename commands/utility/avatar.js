@@ -12,15 +12,9 @@ module.exports = {
     description: 'The user to get avatar of',
     required: false,
   }],
-  async execute (message, args, client) {
-    if (!args) {
-      args = message.options._hoistedOptions.map(({ value, ...etv }) => value);
-    } else {
-      message.editReply = message.reply;
-    }
-    let cmdUser = message.author || message.user
+  async execute (message, args, client, user) {
     let target;
-    if (args.length < 1) target = message.author || message.user;
+    if (args.length < 1) target = user;
     else if (args.length > 1) return message.editReply({ content: "this command accepts a maximum of 1 argument" });
     else {
       let mentionID = args[0].trim().match(/^<@!?(\d+)>$/);
@@ -38,7 +32,7 @@ module.exports = {
       .setAuthor(target.tag, target.displayAvatarURL({dynamic: true}))
       .setTitle("Avatar")
       .setImage(target.displayAvatarURL({size: 512, dynamic: true}))
-      .setFooter(cmdUser.tag, cmdUser.displayAvatarURL({dynamic: true}));
+      .setFooter(user.tag, user.displayAvatarURL({dynamic: true}));
     return message.editReply({ embeds: [avatarEmbed] })
   }
 }

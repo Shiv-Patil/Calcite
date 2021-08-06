@@ -12,13 +12,7 @@ module.exports = {
     description: 'New prefix',
     required: false,
   }],
-  async execute (message, args, client) {
-    if (!args) {
-      args = message.options._hoistedOptions.map(({ value, ...etv }) => value);
-    } else {
-      message.editReply = message.reply;
-    }
-    let user = message.author || message.user;
+  async execute (message, args, client, user) {
     let old_prefix = await db.fetch_prefix(message.guild.id);
     if (args.length < 1) return message.editReply({ content: `my prefix here is \`${old_prefix}\` <:mhml:847464650043555880>` });
     else if (!(args.length > 1)) {

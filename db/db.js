@@ -33,6 +33,13 @@ expo.remove_guild = async (server_id) => {
   await sql`DELETE FROM roles WHERE server_id=${server_id};`;
 }
 
+expo.currency_add_user = async (member_id, calcite=100) => {
+  await sql`
+    INSERT INTO currency (member_id, calcite)
+    VALUES (${member_id}, ${calcite});
+  `;
+}
+
 expo.fetch_prefix = async (server_id) => {
   //Fetches a guild's prefix.
   r = Array.from(await sql`SELECT prefix FROM config WHERE server_id=${server_id};`)[0];

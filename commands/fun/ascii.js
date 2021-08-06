@@ -110,14 +110,7 @@ module.exports = {
     description: 'Text to decorate',
     required: false,
   }],
-  async execute (message, args, client) {
-    if (!args) {
-      args = message.options._hoistedOptions.map(({ value, ...etv }) => value);
-    } else {
-      message.editReply = message.reply;
-    }
-    const user = message.author || message.user;
-
+  async execute (message, args, client, user) {
     let text = "Calcite";
     let result_list = [];
     let split_list = [];

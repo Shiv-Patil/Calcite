@@ -1,5 +1,6 @@
 const Discord = require("discord.js");
 const db = require('../../db/db');
+const utils = require('../../utils');
 const Canvas = require('canvas');
 
 function roundRect(ctx, x, y, width, height, radius, fill, stroke) {
@@ -42,7 +43,7 @@ const fillTextFit = (canvas, ctx, text, x, y, max_width=200, fontSize=32, minFon
   return text;
 };
 
-const getCard = async (user, level, rank, xp, max_xp) => {
+const getCard = async (target, level, rank, xp, max_xp) => {
   const canvas = Canvas.createCanvas(900, 350);
   const ctx = canvas.getContext('2d');
   const bg = await Canvas.loadImage("https://picsum.photos/900/350");
@@ -56,7 +57,7 @@ const getCard = async (user, level, rank, xp, max_xp) => {
   let xp_lbl = (xp > 999) ? `${+((xp/1000).toFixed(2))}K` : `${xp}`;
   let max_xp_lbl = (max_xp > 999) ? `${+((max_xp/1000).toFixed(2))}K` : `${max_xp}`;
   let xp_left_lbl = `${xp_lbl} / ${max_xp_lbl} XP`;
-  let discrim_lbl = `#${user.discriminator}`;
+  let discrim_lbl = `#${target.discriminator}`;
   ctx.font = '41px sans-serif';
   const wd_level = ctx.measureText(level).width;
   const wd_rank = ctx.measureText(rank).width;
@@ -86,7 +87,7 @@ const getCard = async (user, level, rank, xp, max_xp) => {
   const wd_discrim_lbl = ctx.measureText(discrim_lbl).width;
   ctx.fillText(xp_left_lbl, canvas.width-50-(35+wd_xp_left_lbl), canvas.height-160);
 
-  let lbl_username = user.username;
+  let lbl_username = target.username;
   lbl_username = fillTextFit(canvas, ctx, lbl_username, 300, canvas.height-160, 490-wd_discrim_lbl-wd_xp_left_lbl);
   let wd_username_lbl = ctx.measureText(lbl_username).width;
 
@@ -98,7 +99,7 @@ const getCard = async (user, level, rank, xp, max_xp) => {
   ctx.closePath();
   ctx.clip();
 
-  const avatar = await Canvas.loadImage(user.displayAvatarURL({ format: 'jpg' }));
+  const avatar = await Canvas.loadImage(target.displayAvatarURL({ format: 'jpg' }));
   ctx.drawImage(avatar, 85, 85, 180, 180);
 
   return canvas.toBuffer();
@@ -116,24 +117,11 @@ module.exports = {
     description: 'The user to get rank of',
     required: false,
   }],
-  async execute (message, args, client) {
-    if (!args) {
-      args = message.options._hoistedOptions.map(({ value, ...etv }) => value);
-    } else {
-      message.editReply = message.reply;
-    }
-
-    if (args.length > 1) return message.editReply({ content: "this command accepts a maximum of 1 argument" });
-    let user = message.author || message.user;
+  async execute (message, args, client, user) {
+    if (args.length > 1) return message.editReply({ content: "This command accepts a maximum of 1 argument" });
+    let target = user;
     if (args.length) {
-      let mentionID = args[0].trim().match(/^<@!?(\d+)>$/);
-      if (!mentionID) mentionID = args[0].trim();
-      else {mentionID = mentionID[1];}
-      try {
-        user = await client.users.fetch(mentionID);
-      } catch (error) {
-        
-      }
+      target = await utils.parseMention(user, args[0], client);
     }
 
     let r = Array.from(await db.sql`
@@ -149,15 +137,15 @@ module.exports = {
       )
       SELECT *
       FROM ordered
-      WHERE ordered.member_id = ${user.id};
+      WHERE ordered.member_id = ${target.id};
     `);
 
-    if (user.bot) {
+    if (target.bot) {
       return message.editReply({ content: "Bots don't have levels <:CheemsPrayDorime:869938135725903913>" });
     }
 
     if (!r.length) {
-      if (user == message.author) return message.editReply({ content: "You don't have a level yet! Send messages to get a level." });
+      if (target == message.author) return message.editReply({ content: "You don't have a level yet! Send messages to get a level." });
       return message.editReply({ content: "That person doesn't have a level yet." });
     }
 
@@ -166,7 +154,7 @@ module.exports = {
     xp = Number(xp);
     const attachment = new Discord.MessageAttachment(
       await getCard(
-        user, `${member_level}`, `${row_number}`, xp, 3*member_level**2+50*member_level+100
+        target, `${member_level}`, `${row_number}`, xp, 3*member_level**2+50*member_level+100
       ), 'rank_card.png');
     return message.editReply({ files: [attachment] });
   }

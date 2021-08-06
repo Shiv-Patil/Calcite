@@ -56,8 +56,8 @@ module.exports = {
     }
 
     try {
-      await interaction.defer();
-      await command.execute(interaction, undefined, client);
+      await interaction.deferReply();
+      await command.execute(interaction, interaction.options._hoistedOptions.map(({ value, ...etv }) => value), client, interaction.user);
     } catch (error) {
       console.error(error);
       await interaction.reply({ content: 'There was an error while executing this command!', ephemeral: true });

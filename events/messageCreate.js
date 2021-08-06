@@ -78,7 +78,8 @@ module.exports = {
     }
 
     try {
-      await command.execute(message, args, client);
+      message.editReply = message.reply;
+      await command.execute(message, args, client, message.author);
     } catch (error) {
       console.error(error);
       await message.reply({ content: 'There was an error while executing this command!', ephemeral: true });
