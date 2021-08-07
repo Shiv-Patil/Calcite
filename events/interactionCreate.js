@@ -4,25 +4,14 @@ const Discord = require("discord.js");
 module.exports = {
   name: 'interactionCreate',
   async execute (client, interaction) {
-    if (interaction.isButton()) {
-      const [ cmdName, button, author ] = interaction.customId.split(',')
-      const command = client.commands.get(cmdName);
-      if (!command) return;
-      if (interaction.user.id != author) {
-        return await interaction.reply({
-          content: 'This menu is not for you.',
-          ephemeral: true
-        });
-      }
-      try {
-        return await command.onButton(interaction, button, client);
-      } catch (error) {
-        console.error(error);
-        return await interaction.reply({ content: 'There was an error while processing the button press!', ephemeral: true });
-      }
-    }
     if (!interaction.isCommand()) return;
     if (!interaction.guild) return;
+    if (!interaction.guild.me.permissionsIn(interaction.channel).has(["SEND_MESSAGES", "VIEW_CHANNEL"])) {
+      return interaction.reply({
+        content: "I do not have permissions to send messages in this channel.",
+        ephemeral: true
+      });
+    }
 
     const command =
       client.commands.get(interaction.commandName) ||

@@ -139,12 +139,19 @@ module.exports = {
       calcite -= bet;
       await db.sql`UPDATE currency SET calcite=${calcite} WHERE member_id=${user.id}`;
     }
-    
-    let player_deck = [], dealer_deck = []
-    for (var i = 1; i >= 0; i--) {
-      drawCard(player_deck);
-      drawCard(dealer_deck);
-    }
+    var player_deck, dealer_deck
+    do {
+      player_deck = []
+      for (var i = 1; i >= 0; i--) {
+        drawCard(player_deck);
+      }
+    } while (getDeckValue(player_deck) > 20);
+    do {
+      dealer_deck = []
+      for (var i = 1; i >= 0; i--) {
+        drawCard(dealer_deck);
+      }
+    } while (getDeckValue(player_deck) > 20);
 
     const component = new MessageActionRow()
       .addComponents(
