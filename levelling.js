@@ -1,4 +1,5 @@
 const { join } = require("path");
+const utils = require('./utils');
 const db = require(join(__dirname, "db", "db"));
 
 function getRandomXp() {
@@ -21,12 +22,11 @@ module.exports = {
     }
     var { server_id, member_id, member_level, xp, lastmsg } = r[0];
     member_level = Number(member_level);
-    xp = Number(xp);
     lastmsg = Number(lastmsg);
     if ((message.createdTimestamp - lastmsg) >= 60000) {
-      let max = 3*member_level**2+50*member_level+100;
-      xp += getRandomXp();
-      if (xp>=max) {
+      let max = BigInt(3*member_level**2+50*member_level+100);
+      xp += BigInt(utils.getRandomValue(20, 40));
+      if (xp >= max) {
         if(!member_level) member_level = 0;
         member_level += 1;
         xp -= max;

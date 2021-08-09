@@ -112,33 +112,17 @@ module.exports = {
   async execute (message, args, client, user) {
     if (args.length > 1) return message.editReply({ content: "This command accepts a maximum of 1 argument" });
     var bet = null;
-    var calcite;
-    let r = await db.sql`SELECT calcite FROM currency WHERE member_id=${user.id};`
-    if (!r.length) {
-      calcite = BigInt(100);
-      await db.currency_add_user(user.id, calcite)
-    }
-    else calcite = r[0].calcite;
+    var calcite = await db.get_user_calcite(user.id);
 
     if (args.length) {
-      args[0] = args[0].toLowerCase();
-      if (["all", "max"].includes(args[0])) {
-        bet = Math.min(Number(calcite), 5000);
-      }
-      else if (args[0] === "half") {
-        bet = Math.min(Number(calcite)/2, 5000);
-      }
-      else {
-        bet = parseFloat(args[0], 10);
-        if (Number.isNaN(bet)) return message.editReply({ content: "You need to bet real calcite <:CheemsPrayDorime:869938135725903913>" });
-        else if (!Number.isInteger(bet)) return message.editReply({ content: "Calcite can't be divided <:CheemsPrayDorime:869938135725903913>" });
-      }
-      bet = BigInt(bet);
+      bet = utils.parseCalciteString(calcite, args[0], BigInt(5000))
+      if (!bet || Number.isNaN(bet)) return message.editReply({ content: "You need to bet valid amount of calcite <:CheemsPrayDorime:869938135725903913>" });
+      if (bet > BigInt(5000)) return message.editReply({ content: "You're too rich, maximum bet is 5000 calcite. <:CheemsVibe:869783586558079006>" });
       if (calcite < bet) return message.editReply({ content: "You ain't that rich <:CheemsVibe:869783586558079006>" });
-      else if (bet > 5000) return message.editReply({ content: "You're too rich, maximum bet is 5000 calcite. <:CheemsVibe:869783586558079006>" });
       calcite -= bet;
-      await db.sql`UPDATE currency SET calcite=${calcite} WHERE member_id=${user.id}`;
+      await db.set_user_calcite(user.id, calcite);
     }
+
     var player_deck, dealer_deck
     do {
       player_deck = []
@@ -183,11 +167,11 @@ module.exports = {
             else winMsg="**You win! You hit 21!**";
             if (bet) {
               calcite += bet + bet;
-              await db.sql`UPDATE currency SET calcite=${calcite} WHERE member_id=${user.id}`;
+              await db.set_user_calcite(user.id, calcite);
               winMsg+=`\nYou won ${bet} calcite. You now have ${calcite}.`;
             }
             gameEmbed = makeGameEmbed(user, client, player_deck, dealer_deck, false, winMsg, "Nice!", "#39ce3c");
-            await sentMessage.edit({ components: [], embeds: [gameEmbed] });
+            sentMessage.edit({ components: [], embeds: [gameEmbed] });
             game_running = false;
             collector.stop();
           }
@@ -197,7 +181,7 @@ module.exports = {
               loseMsg+=`\nYou lost ${bet} calcite. You now have ${calcite}.`;
             }
             gameEmbed = makeGameEmbed(user, client, player_deck, dealer_deck, false, loseMsg, "Better luck next time ):", "#ef5151");
-            await sentMessage.edit({ components: [], embeds: [gameEmbed] });
+            sentMessage.edit({ components: [], embeds: [gameEmbed] });
             game_running = false;
             collector.stop();
           }
@@ -212,11 +196,11 @@ module.exports = {
             let winMsg = "**You win! The dealer went over 21 and busted.**";
             if (bet) {
               calcite += bet + bet;
-              await db.sql`UPDATE currency SET calcite=${calcite} WHERE member_id=${user.id}`;
+              await db.set_user_calcite(user.id, calcite);
               winMsg+=`\nYou won ${bet} calcite. You now have ${calcite}.`;
             }
             gameEmbed = makeGameEmbed(user, client, player_deck, dealer_deck, false, winMsg, "Nice!", "#39ce3c");
-            await sentMessage.edit({ components: [], embeds: [gameEmbed] });
+            sentMessage.edit({ components: [], embeds: [gameEmbed] });
             game_running = false;
             collector.stop();
           }
@@ -228,7 +212,7 @@ module.exports = {
               loseMsg+=`\nYou lost ${bet} calcite. You now have ${calcite}.`;
             }
             gameEmbed = makeGameEmbed(user, client, player_deck, dealer_deck, false, loseMsg, "Better luck next time ):", "#ef5151");
-            await sentMessage.edit({ components: [], embeds: [gameEmbed] });
+            sentMessage.edit({ components: [], embeds: [gameEmbed] });
             game_running = false;
             collector.stop();
           }
@@ -238,11 +222,11 @@ module.exports = {
               let winMsg = `**You win! You stood with a higher score (\`${player_deck_val}\`) than the dealer (\`${dealer_deck_val}\`).**`;
               if (bet) {
                 calcite += bet + bet;
-                await db.sql`UPDATE currency SET calcite=${calcite} WHERE member_id=${user.id}`;
+                await db.set_user_calcite(user.id, calcite);
                 winMsg+=`\nYou won ${bet} calcite. You now have ${calcite}.`;
               }
               gameEmbed = makeGameEmbed(user, client, player_deck, dealer_deck, false, winMsg, "Nice!", "#39ce3c");
-              await sentMessage.edit({ components: [], embeds: [gameEmbed] });
+              sentMessage.edit({ components: [], embeds: [gameEmbed] });
               game_running = false;
               collector.stop();
             }
@@ -252,7 +236,7 @@ module.exports = {
                 loseMsg+=`\nYou lost ${bet} calcite. You now have ${calcite}.`;
               }
               gameEmbed = makeGameEmbed(user, client, player_deck, dealer_deck, false, loseMsg, "Better luck next time ):", "#ef5151");
-              await sentMessage.edit({ components: [], embeds: [gameEmbed] });
+              sentMessage.edit({ components: [], embeds: [gameEmbed] });
               game_running = false;
               collector.stop();
             }
@@ -260,11 +244,11 @@ module.exports = {
               let drawMsg = `**You tied with the dealer.**`;
               if (bet) {
                 calcite += bet;
-                await db.sql`UPDATE currency SET calcite=${calcite} WHERE member_id=${user.id}`;
+                await db.set_user_calcite(user.id, calcite);
                 drawMsg+=`\nYour currency hasn't changed. You have ${calcite} calcite still.`;
               }
               gameEmbed = makeGameEmbed(user, client, player_deck, dealer_deck, false, drawMsg, "Hate when this happens", "#e5b739");
-              await sentMessage.edit({ components: [], embeds: [gameEmbed] });
+              sentMessage.edit({ components: [], embeds: [gameEmbed] });
               game_running = false;
               collector.stop();
             }
@@ -277,14 +261,13 @@ module.exports = {
 
     collector.on('end', async collected => {
       if (game_running) {
-        idleMsg = "**You didn't respond in time.**";
+        let idleMsg = "**You didn't respond in time.**";
         if (bet) {
           idleMsg+=`\nYou lost ${bet} calcite. You now have ${calcite}.`;
         }
         gameEmbed = makeGameEmbed(user, client, player_deck, dealer_deck, false, idleMsg, "c'mon man", "#e5b739");
-        await sentMessage.edit({ components: [], embeds: [gameEmbed] });
+        sentMessage.edit({ components: [], embeds: [gameEmbed] });
       }
-      else await sentMessage.edit({ components: [] });
     })
   }
 }

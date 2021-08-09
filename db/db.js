@@ -33,11 +33,23 @@ expo.remove_guild = async (server_id) => {
   await sql`DELETE FROM roles WHERE server_id=${server_id};`;
 }
 
-expo.currency_add_user = async (member_id, calcite=100) => {
+expo.set_user_calcite = async (member_id, calcite) => {
   await sql`
     INSERT INTO currency (member_id, calcite)
-    VALUES (${member_id}, ${calcite});
+    VALUES (${member_id}, ${calcite})
+    ON CONFLICT (member_id)
+    DO UPDATE SET calcite=${calcite};
   `;
+}
+
+expo.get_user_calcite = async (member_id) => {
+  r = await sql`SELECT calcite FROM currency WHERE member_id=${member_id};`
+  if (!r.length) {
+    calcite = BigInt(100);
+    await expo.set_user_calcite(member_id, calcite);
+  }
+  else calcite = r[0].calcite;
+  return calcite;
 }
 
 expo.fetch_prefix = async (server_id) => {

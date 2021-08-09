@@ -3,46 +3,6 @@ const db = require('../../db/db');
 const utils = require('../../utils');
 const Canvas = require('canvas');
 
-function roundRect(ctx, x, y, width, height, radius, fill, stroke) {
-  if (typeof stroke == "undefined" ) {
-    stroke = true;
-  }
-  if (typeof radius === "undefined") {
-    radius = 5;
-  }
-  ctx.beginPath();
-  ctx.moveTo(x + radius, y);
-  ctx.lineTo(x + width - radius, y);
-  ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
-  ctx.lineTo(x + width, y + height - radius);
-  ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
-  ctx.lineTo(x + radius, y + height);
-  ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
-  ctx.lineTo(x, y + radius);
-  ctx.quadraticCurveTo(x, y, x + radius, y);
-  ctx.closePath();
-  if (fill) {
-    ctx.fill();
-  }
-  if (stroke) {
-    ctx.stroke();
-  }  
-}
-
-const fillTextFit = (canvas, ctx, text, x, y, max_width=200, fontSize=32, minFontSize=26) => {
-  do {
-    if (fontSize <= minFontSize) {
-      while (ctx.measureText(text).width > max_width) {
-        text = text.slice(0,-1);
-      }
-      break;
-    }
-    ctx.font = `${fontSize--}px sans-serif`;
-  } while (ctx.measureText(text).width > max_width);
-  ctx.fillText(text, x, y);
-  return text;
-};
-
 const getCard = async (target, level, rank, xp, max_xp) => {
   const canvas = Canvas.createCanvas(900, 350);
   const ctx = canvas.getContext('2d');
@@ -77,7 +37,7 @@ const getCard = async (target, level, rank, xp, max_xp) => {
   grd.addColorStop(1, "#4b4d4d");
   ctx.fillStyle = grd;
   ctx.strokeStyle = "#000000";
-  roundRect(ctx, 300, canvas.height-140, 515, 40, 20, true, true);
+  utils.roundRect(ctx, 300, canvas.height-140, 515, 40, 20, true, true);
 
   ctx.textBaseline = "alphabetic";
 
@@ -88,7 +48,7 @@ const getCard = async (target, level, rank, xp, max_xp) => {
   ctx.fillText(xp_left_lbl, canvas.width-50-(35+wd_xp_left_lbl), canvas.height-160);
 
   let lbl_username = target.username;
-  lbl_username = fillTextFit(canvas, ctx, lbl_username, 300, canvas.height-160, 490-wd_discrim_lbl-wd_xp_left_lbl);
+  lbl_username = utils.fillTextFit(canvas, ctx, lbl_username, 300, canvas.height-160, 490-wd_discrim_lbl-wd_xp_left_lbl, 32, 26);
   let wd_username_lbl = ctx.measureText(lbl_username).width;
 
   ctx.font = '23px sans-serif';

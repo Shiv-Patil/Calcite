@@ -17,16 +17,10 @@ module.exports = {
   async execute (message, args, client, user) {
     if (args.length > 1) return message.editReply({ content: "this command accepts a maximum of 1 argument" });
     let target = user;
-    let calcite;
     if (args.length) {
       target = await utils.parseMention(user, args[0], client);
     }
-    r = await db.sql`SELECT calcite FROM currency WHERE member_id=${target.id};`
-    if (!r.length) {
-      calcite = BigInt(100);
-      await db.currency_add_user(target.id, calcite)
-    }
-    else calcite = r[0].calcite;
+    var calcite = await db.get_user_calcite(target.id);
     const balanceEmbed = new Discord.MessageEmbed()
       .setTitle('Balance')
       .setDescription(`Calcite: ${calcite}`)

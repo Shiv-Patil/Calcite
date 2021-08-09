@@ -1,39 +1,27 @@
 const Discord = require("discord.js");
 const db = require('../../db/db');
 const Canvas = require('canvas');
+const utils = require('../../utils');
 
-const fillTextFit = (canvas, ctx, text, x, y, max_width=200, fontSize=34, minFontSize=34) => {
-  do {
-    if (fontSize <= minFontSize) {
-      while (ctx.measureText(text).width > max_width) {
-        text = text.slice(0,-1);
-      }
-      break;
-    }
-    ctx.font = `${fontSize--}px sans-serif`;
-  } while (ctx.measureText(text).width > max_width);
-  ctx.fillText(text, x, y);
-  return text;
-};
-
-const getLevelsCard = async (memberList, client) => {
+const getLevelsCard = async (memberList, client, guild) => {
   const canvas = Canvas.createCanvas(750, 810);
   const ctx = canvas.getContext('2d');
   const padding = 5;
   ctx.textBaseline = "middle";
-  var user;
-  for (var i = 0; i < memberList.length; i++) {
-    let { member_level, member_id, row_number } = memberList[i];
+  var guild_members = guild.members;
+  var y_level_multi = 0;
+  for (var i = 0; i < memberList.length; ++i) {
+    if (!memberList[i]) break;
+    var { member_level, member_id, row_number } = memberList[i];
     try {
-      user = await client.users.fetch(member_id);
+      var member = (await guild_members.fetch(`${member_id}`)).user;
     } catch (error) {
-      console.log(error);
       continue;
     }
-    let y_level = (i!=0) ? i*(76+padding) : 0;
+    let y_level = y_level_multi*(76+padding);
     ctx.fillStyle = "rgba(0, 0, 0, 0.1)";
     ctx.fillRect(0, y_level, canvas.width, 90);
-    const avatar = await Canvas.loadImage(user.displayAvatarURL({ format: 'png' }));
+    const avatar = await Canvas.loadImage(member.displayAvatarURL({ format: 'png' }));
     ctx.drawImage(avatar, 0, y_level, 81, 81);
     ctx.fillStyle = '#ffffff';
     ctx.font = 'bold 34px sans-serif';
@@ -41,18 +29,20 @@ const getLevelsCard = async (memberList, client) => {
     let wd_level_lbl = ctx.measureText(level_lbl).width;
     ctx.fillText(level_lbl, canvas.width-10-wd_level_lbl, y_level+38);
 
-    let rank_lbl = `#${row_number}`
+    let rank_lbl = `#${y_level_multi+1}`
     let wd_rank_lbl = ctx.measureText(rank_lbl).width;
     ctx.fillText(rank_lbl, 100, y_level+38);
 
-    fillTextFit(canvas, ctx, user.tag, 110+wd_rank_lbl, y_level+38, canvas.width-(140+wd_rank_lbl+wd_level_lbl));
+    utils.fillTextFit(canvas, ctx, member.tag, 110+wd_rank_lbl, y_level+38, canvas.width-(140+wd_rank_lbl+wd_level_lbl));
+    y_level_multi++;
+    if (i >= 10) break;
   }
   return canvas.toBuffer();
 }
 
 module.exports = {
-  name: 'levels',
-  aliases: ['levels', 'lb', 'leaderboard'],
+  name: 'leaderboard',
+  aliases: ['leaderboard', 'levels', 'lb'],
   category: "Levelling",
   description: "Shows server leaderboard",
   cooldown: 30,
@@ -69,7 +59,7 @@ module.exports = {
         FROM ranks
       )
       SELECT *
-      FROM ordered LIMIT 10;
+      FROM ordered;
     `;
     const levelsEmbed = new Discord.MessageEmbed()
       .setTitle('Leaderboard')
@@ -78,7 +68,7 @@ module.exports = {
       .setFooter(user.tag, user.displayAvatarURL({dynamic: true}));
     const attachment = new Discord.MessageAttachment(
       await getLevelsCard(
-        r, client
+        r, client, message.guild
       ), 'levels_card.png');
     return message.editReply({ embeds: [levelsEmbed], files: [attachment] });
   }
