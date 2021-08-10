@@ -101,7 +101,7 @@ const letter_dic = {
 module.exports = {
   name: 'ascii',
   aliases: ['ascii'],
-  category: "Image",
+  category: "Fun",
   description: "Decorates plain text in ascii style",
   cooldown: 10,
   options: [{

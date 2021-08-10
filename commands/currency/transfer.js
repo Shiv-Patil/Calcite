@@ -5,8 +5,8 @@ const utils = require('../../utils');
 function TransferEmbed(user, description, color="#907fa4") {
   return new MessageEmbed()
     .setColor(color)
-    .setFooter(`${user.tag}`, user.displayAvatarURL({dynamic: true}))
     .setDescription(description)
+    .setFooter(user.tag, user.displayAvatarURL({dynamic: true}));
 }
 
 module.exports = {
@@ -111,13 +111,14 @@ You now have \`${calcite_user}\` calcite left.**`
       }
     });
 
-    collector.on('end', async collected => {
+    collector.on('end', async (collected, reason) => {
+      if (reason==="messageDelete") return;
       if (!transfer_done) {
         embed = new MessageEmbed(embed).setDescription(
           embed.description += `\n\n**User didn't respond in time.**`
         );
         return await sentMessage.edit({ embeds: [embed], components:[] });
       }
-    })
+    });
   }
 }

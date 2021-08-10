@@ -24,7 +24,11 @@ function getDeckValue(deck) {
 }
 
 function drawCard(deck) {
-  let [ _card, _value ] = getCard();
+  let _card, _value;
+  do {
+    [ _card, _value ] = getCard();
+  }
+  while (deck.find(ele => ele.card === _card));
   deck.push({card: _card, value: _value});
   while (getDeckValue(deck) > 21) {
     let indexA = deck.findIndex(el => (el.card.slice(-1) === "A") && (el.value === 11));
@@ -68,9 +72,9 @@ function playerStand(dealer_deck) {
 function getCardsString(deck, hide=false) {
   let CardsString = "Cards:";
   for (var i = 0; i < deck.length; i++) {
-    CardsString += ` [\`${deck[i].card}\`](https://discord.gg/WV5XEqF87s)`;
+    CardsString += ` [\`${deck[i].card}\`]()`;
     if (hide) {
-      CardsString += ` [\`?\`](https://discord.gg/WV5XEqF87s)`;
+      CardsString += ` [\`?\`]()`;
       break;
     }
   }
@@ -135,7 +139,7 @@ module.exports = {
       for (var i = 1; i >= 0; i--) {
         drawCard(dealer_deck);
       }
-    } while (getDeckValue(player_deck) > 20);
+    } while (getDeckValue(dealer_deck) > 20);
 
     const component = new MessageActionRow()
       .addComponents(
@@ -259,7 +263,8 @@ module.exports = {
       }
     });
 
-    collector.on('end', async collected => {
+    collector.on('end', async (collected, reason) => {
+      if (reason==="messageDelete") return;
       if (game_running) {
         let idleMsg = "**You didn't respond in time.**";
         if (bet) {
@@ -268,6 +273,6 @@ module.exports = {
         gameEmbed = makeGameEmbed(user, client, player_deck, dealer_deck, false, idleMsg, "c'mon man", "#e5b739");
         sentMessage.edit({ components: [], embeds: [gameEmbed] });
       }
-    })
+    });
   }
 }
