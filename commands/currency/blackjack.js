@@ -72,9 +72,9 @@ function playerStand(dealer_deck) {
 function getCardsString(deck, hide=false) {
   let CardsString = "Cards:";
   for (var i = 0; i < deck.length; i++) {
-    CardsString += ` [\`${deck[i].card}\`]()`;
+    CardsString += ` [\`${deck[i].card}\`](https://umm.nothing.here/)`;
     if (hide) {
-      CardsString += ` [\`?\`]()`;
+      CardsString += ` [\`?\`](https://umm.nothing.here/)`;
       break;
     }
   }
