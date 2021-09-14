@@ -30,9 +30,6 @@ function getHelpString(cmd_array, page) {
 
 function resolveArray(string, GeneralCommands, LevellingCommands, CurrencyCommands, FunCommands, AllCommands) {
   switch (string) {
-    case 'all':
-      return ["All Commands", AllCommands];
-      break;
     case 'utility':
       return ["General Commands", GeneralCommands];
       break;
@@ -46,6 +43,7 @@ function resolveArray(string, GeneralCommands, LevellingCommands, CurrencyComman
       return ["Fun Commands", FunCommands];
       break;
   }
+  return ["All Commands", AllCommands];
 }
 
 module.exports = {

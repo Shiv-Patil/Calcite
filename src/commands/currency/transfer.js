@@ -1,6 +1,7 @@
 const db = require('../../db/db');
 const { MessageActionRow, MessageButton, MessageEmbed } = require('discord.js');
-const utils = require('../../utils');
+const utils = require('../../utils/currency.js');
+const GenericCommand = require('../../models/GenericCommand');
 
 function TransferEmbed(user, description, color="#907fa4") {
   return new MessageEmbed()
@@ -9,40 +10,19 @@ function TransferEmbed(user, description, color="#907fa4") {
     .setFooter(user.tag, user.displayAvatarURL({dynamic: true}));
 }
 
-module.exports = {
-  name: 'transfer',
-  aliases: ['transfer', 'give'],
-  category: "Currency",
-  description: "Transfers your calcite to another user",
-  cooldown: 10,
-  options: [
-    {
-      name: 'user',
-      type: 'USER',
-      description: 'The user to get balance of',
-      required: true
-    },
-    {
-      name: 'amount',
-      type: 'STRING',
-      description: 'Amount of calcite to transfer',
-      required: true
-    }
-  ],
-  async execute (message, args, client, user) {
-    if (args.length > 2) return message.editReply({ content: "Syntax -> `transfer <user> <amount>`" });
-    if (args.length < 2) return message.editReply({ content: "Syntax -> `transfer <user> <amount>`" });
-    let target = await utils.parseMention(false, args[0], client);
-    if (!target) return message.editReply({ content: "Please specify a valid user." });
+module.exports = new GenericCommand(
+  async (interaction, options, client, user) => {
 
-    if (user.tag === target.tag) return message.editReply({ content: "Sending calcite to yourself, smh." });
+    let target = await options.getUser("user", true);
+
+    if (user.tag === target.tag) return interaction.editReply({ content: "Sending calcite to yourself, smh." });
 
     var calcite_user = await db.get_user_calcite(user.id);
     var calcite_target = await db.get_user_calcite(target.id);
 
-    var transfer_amount = utils.parseCalciteString(calcite_user, args[1]);
-    if (!transfer_amount || Number.isNaN(transfer_amount)) return message.editReply({ content: "You need to specify a valid amount of calcite to transfer <:CheemsPrayDorime:869938135725903913>" });
-    if (calcite_user < transfer_amount) return message.editReply({ content: "You ain't that rich <:CheemsVibe:869783586558079006>" });
+    var transfer_amount = utils.parseCalciteString(calcite_user, options.getString("amount", true));
+    if (!transfer_amount || Number.isNaN(transfer_amount)) return interaction.editReply({ content: "You need to specify a valid amount of calcite to transfer <:CheemsPrayDorime:869938135725903913>" });
+    if (calcite_user < transfer_amount) return interaction.editReply({ content: "You ain't that rich <:CheemsVibe:869783586558079006>" });
 
     let tax;
 
@@ -70,11 +50,11 @@ module.exports = {
 
     if (tax) {
       embed = TransferEmbed(user, `Are you sure you want to give \`${transfer_amount}\` calcite to ${target} after \`6.9%\` tax?`)
-      sentMessage = await message.editReply({ embeds: [embed], components:[component] });
+      sentMessage = await interaction.editReply({ embeds: [embed], components:[component] });
     }
     else {
       embed = TransferEmbed(user, `Are you sure you want to give \`${transfer_amount}\` calcite to ${target}?`)
-      sentMessage = await message.editReply({ embeds: [embed], components:[component] });
+      sentMessage = await interaction.editReply({ embeds: [embed], components:[component] });
     }
 
     var transfer_done = false;
@@ -120,5 +100,26 @@ You now have \`${calcite_user}\` calcite left.**`
         return await sentMessage.edit({ embeds: [embed], components:[] });
       }
     });
+  },
+  {
+    name: 'transfer',
+    aliases: ['transfer', 'give'],
+    category: "Currency",
+    description: "Transfers your calcite to another user",
+    cooldown: 10,
+    options: [
+      {
+        name: 'user',
+        type: 'USER',
+        description: 'The user to transfer calcite to',
+        required: true
+      },
+      {
+        name: 'amount',
+        type: 'STRING',
+        description: 'Amount of calcite to transfer',
+        required: true
+      }
+    ]
   }
-}
+)

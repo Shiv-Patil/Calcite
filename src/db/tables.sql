@@ -98,12 +98,7 @@ CREATE TABLE IF NOT EXISTS warns(
 -- );
 
 CREATE TABLE IF NOT EXISTS currency(
-    member_id           BIGINT,
+    member_id           BIGINT UNIQUE,
     calcite             BIGINT DEFAULT 100,
-    max_calcite         BIGINT DEFAULT 10000,
-    last_daily          BIGINT DEFAULT 0,
-    last_work           BIGINT DEFAULT 0,
-    pickaxe_id          SMALLINT DEFAULT 0,
-    xp_multi            SMALLINT DEFAULT 1,
     inventory           inventory_item[] DEFAULT '{}'
 );

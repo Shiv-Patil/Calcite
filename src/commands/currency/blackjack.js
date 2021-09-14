@@ -1,6 +1,7 @@
 const db = require('../../db/db');
 const { MessageActionRow, MessageButton, MessageEmbed } = require('discord.js');
-const utils = require('../../utils');
+const utils = require('../../utils/currency.js');
+const GenericCommand = require('../../models/GenericCommand');
 
 const cardTypes = ["♦", "♥", "♣", "♠"];
 const cardNums = {
@@ -72,9 +73,9 @@ function playerStand(dealer_deck) {
 function getCardsString(deck, hide=false) {
   let CardsString = "Cards:";
   for (var i = 0; i < deck.length; i++) {
-    CardsString += ` [\`${deck[i].card}\`]()`;
+    CardsString += ` [\`${deck[i].card}\`](https://umm.nothing.here)`;
     if (hide) {
-      CardsString += ` [\`?\`]()`;
+      CardsString += ` [\`?\`](https://umm.nothing.here)`;
       break;
     }
   }
@@ -101,28 +102,16 @@ function makeGameEmbed(user, client, player_deck, dealer_deck, hide=false, descr
     .setFooter(footer);
 }
 
-module.exports = {
-  name: 'blackjack',
-  aliases: ['blackjack', 'bj'],
-  category: "Currency",
-  description: "Play some blackjack! Bet some calcite or play for fun.",
-  cooldown: 15,
-  options: [{
-    name: 'calcite',
-    type: 'STRING',
-    description: 'Amount of calcite to bet',
-    required: false,
-  }],
-  async execute (message, args, client, user) {
-    if (args.length > 1) return message.editReply({ content: "This command accepts a maximum of 1 argument" });
+module.exports = new GenericCommand(
+  async (interaction, options, client, user) => {
     var bet = null;
     var calcite = await db.get_user_calcite(user.id);
 
-    if (args.length) {
-      bet = utils.parseCalciteString(calcite, args[0], BigInt(5000))
-      if (!bet || Number.isNaN(bet)) return message.editReply({ content: "You need to bet valid amount of calcite <:CheemsPrayDorime:869938135725903913>" });
-      if (bet > BigInt(5000)) return message.editReply({ content: "You're too rich, maximum bet is 5000 calcite. <:CheemsVibe:869783586558079006>" });
-      if (calcite < bet) return message.editReply({ content: "You ain't that rich <:CheemsVibe:869783586558079006>" });
+    if (await options.get("calcite")) {
+      bet = utils.parseCalciteString(calcite, options.getString("calcite"), BigInt(5000))
+      if (!bet || Number.isNaN(bet)) return interaction.editReply({ content: "You need to bet valid amount of calcite <:CheemsPrayDorime:869938135725903913>" });
+      if (bet > BigInt(5000)) return interaction.editReply({ content: "You're too rich, maximum bet is 5000 calcite. <:CheemsVibe:869783586558079006>" });
+      if (calcite < bet) return interaction.editReply({ content: "You ain't that rich <:CheemsVibe:869783586558079006>" });
       calcite -= bet;
       await db.set_user_calcite(user.id, calcite);
     }
@@ -156,7 +145,7 @@ module.exports = {
     const bet_description = (bet) ? "Your bet: "+bet.toString() : "Your bet: None";
     var gameEmbed = makeGameEmbed(user, client, player_deck, dealer_deck, true, bet_description);
     var game_running = true;
-    let sentMessage = await message.editReply({ embeds: [gameEmbed], components: [component] });
+    let sentMessage = await interaction.editReply({ embeds: [gameEmbed], components: [component] });
 
     const collector = sentMessage.createMessageComponentCollector({ componentType: 'BUTTON', idle: 20000, dispose: true });
 
@@ -274,5 +263,18 @@ module.exports = {
         sentMessage.edit({ components: [], embeds: [gameEmbed] });
       }
     });
+  },
+  {
+    name: 'blackjack',
+    category: "Currency",
+    description: "Play some blackjack! Bet some calcite or play for fun.",
+    cooldown: 15,
+    options: [{
+      name: 'calcite',
+      type: 'STRING',
+      description: 'Amount of calcite to bet',
+      required: false,
+    }],
+    perms: ["EMBED_LINKS"]
   }
-}
+)
