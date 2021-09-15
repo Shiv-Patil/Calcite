@@ -1,7 +1,8 @@
 const Discord = require("discord.js");
 const db = require('../../db/db');
 const Canvas = require('canvas');
-const utils = require('../../utils');
+const GenericCommand = require('../../models/GenericCommand');
+const utils = require('../../utils/canvas.js');
 
 const getLevelsCard = async (memberList, client, guild) => {
   const canvas = Canvas.createCanvas(750, 810);
@@ -40,18 +41,13 @@ const getLevelsCard = async (memberList, client, guild) => {
   return canvas.toBuffer();
 }
 
-module.exports = {
-  name: 'leaderboard',
-  aliases: ['leaderboard', 'levels', 'lb'],
-  category: "Levelling",
-  description: "Shows server leaderboard",
-  cooldown: 30,
-  async execute (message, args, client, user) {
+module.exports = new GenericCommand(
+  async (interaction, options, client, user) => {
     let r = await db.sql`
       WITH ranks AS (
         SELECT *
         FROM level
-        WHERE server_id = ${message.guild.id}
+        WHERE server_id = ${interaction.guild.id}
         ORDER BY member_level DESC, xp DESC
       ),
       ordered(member_level, member_id, row_number) AS (
@@ -63,13 +59,21 @@ module.exports = {
     `;
     const levelsEmbed = new Discord.MessageEmbed()
       .setTitle('Leaderboard')
-      .setDescription(`Top 10 ranks in ${message.guild.name}`)
+      .setDescription(`Top 10 ranks in ${interaction.guild.name}`)
       .setImage('attachment://levels_card.png')
       .setFooter(user.tag, user.displayAvatarURL({dynamic: true}));
     const attachment = new Discord.MessageAttachment(
       await getLevelsCard(
-        r, client, message.guild
+        r, client, interaction.guild
       ), 'levels_card.png');
-    return message.editReply({ embeds: [levelsEmbed], files: [attachment] });
+    return interaction.editReply({ embeds: [levelsEmbed], files: [attachment] });
+  },
+  {
+    name: 'leaderboard',
+    aliases: ['leaderboard', 'levels', 'lb'],
+    category: "Levelling",
+    description: "Shows server leaderboard",
+    cooldown: 30,
+    perms: ["EMBED_LINKS"]
   }
-}
+)

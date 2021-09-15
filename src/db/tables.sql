@@ -50,8 +50,7 @@ CREATE TABLE IF NOT EXISTS level(
     server_id           BIGINT,
     member_id           BIGINT,
     member_level        BIGINT,
-    xp                  BIGINT,
-    lastmsg             BIGINT
+    xp                  BIGINT
 );
 
 CREATE TABLE IF NOT EXISTS level_rewards(

@@ -1,6 +1,6 @@
 const db = require('../../db/db');
 const { MessageActionRow, MessageSelectMenu, MessageButton, MessageEmbed } = require('discord.js');
-const utils = require('../../utils');
+const GenericCommand = require('../../models/GenericCommand');
 
 function HelpEmbed(user, title, description, page, pages) {
   return new MessageEmbed()
@@ -46,19 +46,14 @@ function resolveArray(string, GeneralCommands, LevellingCommands, CurrencyComman
   return ["All Commands", AllCommands];
 }
 
-module.exports = {
-  name: 'help',
-  aliases: ['help', 'commands'],
-  category: "Utility",
-  description: "Lists commands",
-  cooldown: 5,
-  async execute (message, args, client, user) {
+module.exports = new GenericCommand(
+  async (interaction, options, client, user) => {
     const AllCommands=[], CurrencyCommands=[], FunCommands=[], LevellingCommands=[], GeneralCommands=[];
-    const sortedCommands = Array.from(client.commands.values()).sort((a, b) => (a.name > b.name) ? -1 : 1);
+    const sortedCommands = Array.from(client.commands.values()).sort((a, b) => (a.props.name > b.props.name) ? -1 : 1);
     sortedCommands.forEach(cmd => {
-      let _details = { name: cmd.name, description: cmd.description };
+      let _details = { name: cmd.props.name, description: cmd.props.description };
       AllCommands.push(_details);
-      resolveArray(cmd.category.toLowerCase(), GeneralCommands, LevellingCommands, CurrencyCommands, FunCommands, AllCommands)[1].push(_details);
+      resolveArray(cmd.props.category.toLowerCase(), GeneralCommands, LevellingCommands, CurrencyCommands, FunCommands, AllCommands)[1].push(_details);
     })
     var selectedArray = AllCommands, title = "All Commands";
     var [description, page, pages] = getHelpString(selectedArray, 1);
@@ -101,7 +96,7 @@ module.exports = {
           .setLabel('Next page')
           .setStyle('SECONDARY')
       );
-    const sentMessage = await message.editReply({ embeds: [embed], components: [row1, row2] });
+    const sentMessage = await interaction.editReply({ embeds: [embed], components: [row1, row2] });
 
     const collector = sentMessage.createMessageComponentCollector({ idle: 20000, dispose: true });
   
@@ -131,5 +126,12 @@ module.exports = {
       if (reason==="messageDelete") return;
       if (sentMessage.editable) sentMessage.edit({ components: [] });
     });
+  },
+  {
+    name: 'help',
+    category: "Utility",
+    description: "Lists commands",
+    cooldown: 5,
+    perms: ["EMBED_LINKS"]
   }
-}
+)

@@ -1,4 +1,5 @@
 const Discord = require("discord.js");
+const GenericCommand = require('../../models/GenericCommand');
 
 const letter_dic = {
   '$': '  _  \n | | \n/ __)\n\\__ \\\n(   /\n |_| \n',
@@ -98,25 +99,14 @@ const letter_dic = {
   " ": '  \n  \n  \n  \n  \n  \n'
 }
 
-module.exports = {
-  name: 'ascii',
-  aliases: ['ascii'],
-  category: "Fun",
-  description: "Decorates plain text in ascii style",
-  cooldown: 10,
-  options: [{
-    name: 'text',
-    type: 'STRING',
-    description: 'Text to decorate',
-    required: false,
-  }],
-  async execute (message, args, client, user) {
+module.exports = new GenericCommand(
+  async (interaction, options, client, user) => {
     let text = "Calcite";
     let result_list = [];
     let split_list = [];
-  	if (args.length) text = args.join(" ");
+  	if (await options.get("text")) text = await options.getString("text");
 
-    if (text.length > 69) return message.editReply({ content: "try again with fewer characters." });
+    if (text.length > 69) return interaction.editReply({ content: "try again with fewer characters." });
 
     for (let i = 0; i < text.length; i++) {
       if (!letter_dic[text[i]]) continue;
@@ -132,7 +122,20 @@ module.exports = {
 
     let buf = Buffer.from(result_list.join("\n"), 'utf-8');
     const attachment = new Discord.MessageAttachment(buf, user.tag+'_ascii.txt');
-    message.editReply({ files: [attachment] });
+    interaction.editReply({ files: [attachment] });
+  },
+  {
+    name: 'ascii',
+    aliases: ['ascii'],
+    category: "Fun",
+    description: "Decorates plain text in ascii style",
+    cooldown: 10,
+    options: [{
+      name: 'text',
+      type: 'STRING',
+      description: 'Text to decorate',
+      required: false,
+    }],
+    perms: ["ATTACH_FILES"]
   }
-}
-
+)

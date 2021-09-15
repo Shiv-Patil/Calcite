@@ -1,7 +1,8 @@
 const Discord = require("discord.js");
 const db = require('../../db/db');
-const utils = require('../../utils');
+const utils = require('../../utils/canvas.js');
 const Canvas = require('canvas');
+const GenericCommand = require('../../models/GenericCommand');
 
 const getCard = async (target, level, rank, xp, max_xp) => {
   const canvas = Canvas.createCanvas(900, 350);
@@ -65,30 +66,18 @@ const getCard = async (target, level, rank, xp, max_xp) => {
   return canvas.toBuffer();
 }
 
-module.exports = {
-  name: 'rank',
-  aliases: ['rank', 'level'],
-  category: "Levelling",
-  description: "Shows your rank and level",
-  cooldown: 10,
-  options: [{
-    name: 'user',
-    type: 'USER',
-    description: 'The user to get rank of',
-    required: false,
-  }],
-  async execute (message, args, client, user) {
-    if (args.length > 1) return message.editReply({ content: "This command accepts a maximum of 1 argument" });
+module.exports = new GenericCommand(
+  async (interaction, options, client, user) => {
     let target = user;
-    if (args.length) {
-      target = await utils.parseMention(user, args[0], client);
+    if (await options.get("user")) {
+      target = await options.getUser("user");
     }
 
     let r = Array.from(await db.sql`
       WITH ranks AS (
         SELECT *
         FROM level
-        WHERE server_id = ${message.guild.id}
+        WHERE server_id = ${interaction.guild.id}
         ORDER BY member_level DESC, xp DESC
       ),
       ordered(member_level, xp, member_id, row_number) AS (
@@ -101,12 +90,12 @@ module.exports = {
     `);
 
     if (target.bot) {
-      return message.editReply({ content: "Bots don't have levels <:CheemsPrayDorime:869938135725903913>" });
+      return interaction.editReply({ content: "Bots don't have levels <:CheemsPrayDorime:869938135725903913>" });
     }
 
     if (!r.length) {
-      if (target == message.author) return message.editReply({ content: "You don't have a level yet! Send messages to get a level." });
-      return message.editReply({ content: "That person doesn't have a level yet." });
+      if (target == interaction.author) return interaction.editReply({ content: "You don't have a level yet! Send messages to get a level." });
+      return interaction.editReply({ content: "That person doesn't have a level yet." });
     }
 
     let { member_level, xp, member_id, row_number } = r[0];
@@ -116,6 +105,19 @@ module.exports = {
       await getCard(
         target, `${member_level}`, `${row_number}`, xp, 3*member_level**2+50*member_level+100
       ), 'rank_card.png');
-    return message.editReply({ files: [attachment] });
+    return interaction.editReply({ files: [attachment] });
+  },
+  {
+    name: 'rank',
+    aliases: ['rank', 'level'],
+    category: "Levelling",
+    description: "Shows your rank and level",
+    cooldown: 10,
+    options: [{
+      name: 'user',
+      type: 'USER',
+      description: 'The user to get rank of',
+      required: false,
+    }],
   }
-}
+)

@@ -15,7 +15,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node .",
+    "start": "node src/.",
     "production": "NODE_ENV=production&&npm start",
     "development": "NODE_ENV=development&&npm start"
   },
